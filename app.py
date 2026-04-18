@@ -22,9 +22,10 @@ st.set_page_config(
 )
 
 # ── Constantes ────────────────────────────────────────────────────────────────
-LAT    = -15.9297
-LON    = -48.8058
-CIDADE = "Corumbá de Goiás, GO"
+
+LAT    = -15.765843
+LON    = -48.657534
+CIDADE = "Corumbá de Goiás — Cond. Parque das Águas, GO"
 TZ     = "America/Sao_Paulo"
 
 MESES_PT    = ["Jan","Fev","Mar","Abr","Mai","Jun",
@@ -98,6 +99,14 @@ st.markdown("""
 h1, h2, h3 { font-family: monospace !important; }
 .stTabs [data-baseweb="tab"] {
     font-family: monospace; font-size: 13px;
+}
+.rodape {
+    background: #1A1D27;
+    border-top: 1px solid #2A2D3A;
+    border-radius: 12px;
+    padding: 18px 32px;
+    text-align: center;
+    margin-top: 2rem;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -177,9 +186,9 @@ def simular_cenarios(anos: int = 30):
     anos_seq = np.arange(2025, 2025 + anos)
     base = 22.5
     cenarios = {
-        "Otimista (SSP1-2.6)":  {"delta": 1.2, "cor": COR_VERDE,   "dash": "solid"},
-        "Neutro (SSP2-4.5)":    {"delta": 1.8, "cor": COR_AMARELO, "dash": "dash"},
-        "Pessimista (SSP5-8.5)":{"delta": 3.5, "cor": COR_VERM,    "dash": "dot"},
+        "Otimista (SSP1-2.6)":   {"delta": 1.2, "cor": COR_VERDE,   "dash": "solid"},
+        "Neutro (SSP2-4.5)":     {"delta": 1.8, "cor": COR_AMARELO, "dash": "dash"},
+        "Pessimista (SSP5-8.5)": {"delta": 3.5, "cor": COR_VERM,    "dash": "dot"},
     }
     for cfg in cenarios.values():
         trend        = base + cfg["delta"] * np.linspace(0, 1, anos)
@@ -196,11 +205,11 @@ ICON_MAP = {
     80:"🌦", 81:"🌧", 82:"⛈", 95:"⛈",
 }
 COND_MAP = {
-    0:"Céu limpo",          1:"Principalmente limpo", 2:"Parcialmente nublado",
-    3:"Nublado",            45:"Névoa",               48:"Névoa com geada",
-    51:"Garoa leve",        53:"Garoa moderada",       55:"Garoa intensa",
-    61:"Chuva leve",        63:"Chuva moderada",       65:"Chuva forte",
-    80:"Pancadas leves",    81:"Pancadas moderadas",   82:"Pancadas fortes",
+    0:"Céu limpo",       1:"Principalmente limpo", 2:"Parcialmente nublado",
+    3:"Nublado",         45:"Névoa",               48:"Névoa com geada",
+    51:"Garoa leve",     53:"Garoa moderada",       55:"Garoa intensa",
+    61:"Chuva leve",     63:"Chuva moderada",       65:"Chuva forte",
+    80:"Pancadas leves", 81:"Pancadas moderadas",   82:"Pancadas fortes",
     95:"Tempestade",
 }
 
@@ -214,7 +223,7 @@ def get_cond(code): return COND_MAP.get(code, "Variável")
 with st.sidebar:
     st.markdown("## 🌤 ClimAGO")
     st.markdown(f"**{CIDADE}**")
-    st.markdown(f"`{LAT}°S  {abs(LON)}°O` | Cerrado | 850 m")
+    st.markdown(f"`{LAT}°S  {abs(LON)}°O` | Cerrado | 1030 m")
     st.divider()
 
     st.markdown("#### Configurações")
@@ -236,6 +245,14 @@ with st.sidebar:
 
     st.markdown(
         '<p class="fonte-nota">Fonte: Open-Meteo API<br>Sem chave · Dados gratuitos</p>',
+        unsafe_allow_html=True,
+    )
+    # Copyright na sidebar
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        '<p class="fonte-nota" style="text-align:center;">'
+        '© 2026 <a href="https://agrosophia.com.br" target="_blank" '
+        'style="color:#3B82F6;text-decoration:none;">agrosophia.com.br</a></p>',
         unsafe_allow_html=True,
     )
 
@@ -293,7 +310,6 @@ with tab1:
     da   = d_curto["daily"]
     hora = datetime.now().hour
 
-    # Métricas
     c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("🌡 Temperatura",
               f"{conv(cw['temperature'])}{unidade}",
@@ -311,7 +327,6 @@ with tab1:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Alerta
     icon_cond = get_icon(cw["weathercode"])
     cond_txt  = get_cond(cw["weathercode"])
     if chuva_hoje > 20:
@@ -327,9 +342,8 @@ with tab1:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Gráfico 24h
-    h0      = hora
-    h1      = min(h0 + 24, len(hi["time"]))
+    h0       = hora
+    h1       = min(h0 + 24, len(hi["time"]))
     horarios = hi["time"][h0:h1]
     temps24  = [conv(v) for v in hi["temperature_2m"][h0:h1]]
     chuva24  = hi["precipitation"][h0:h1]
@@ -377,7 +391,6 @@ with tab2:
         vento = [v or 0 for v in da["windspeed_10m_max"]]
         icons = [get_icon(c) for c in da["weathercode"]]
 
-        # Cards
         cols = st.columns(7)
         for i, col in enumerate(cols):
             dt   = datetime.fromisoformat(datas[i])
@@ -395,7 +408,6 @@ with tab2:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Gráfico temperatura
         fig1 = go.Figure()
         fig1.add_trace(go.Scatter(
             x=datas, y=t_max, name="Máxima",
@@ -457,8 +469,8 @@ with tab3:
     if not d_medio:
         st.error("Dados de médio prazo indisponíveis.")
     else:
-        da2   = d_medio["daily"]
-        n     = min(dias_medio, len(da2["time"]))
+        da2    = d_medio["daily"]
+        n      = min(dias_medio, len(da2["time"]))
         datas2 = da2["time"][:n]
         t_max2 = [conv(v) for v in da2["temperature_2m_max"][:n]]
         t_min2 = [conv(v) for v in da2["temperature_2m_min"][:n]]
@@ -568,12 +580,11 @@ with tab4:
         apply_template(fig_l2)
         st.plotly_chart(fig_l2, use_container_width=True)
 
-    # Projeção 12 meses
-    hoje         = datetime.now()
+    hoje          = datetime.now()
     meses_futuros = [(hoje + timedelta(days=30*i)).strftime("%b/%y") for i in range(12)]
-    idx_mes      = [(hoje.month - 1 + i) % 12 for i in range(12)]
-    temp_proj    = [round(CLIMA_TEMP[m] + 1.2, 1) for m in idx_mes]
-    temp_hist    = [CLIMA_TEMP[m] for m in idx_mes]
+    idx_mes       = [(hoje.month - 1 + i) % 12 for i in range(12)]
+    temp_proj     = [round(CLIMA_TEMP[m] + 1.2, 1) for m in idx_mes]
+    temp_hist     = [CLIMA_TEMP[m] for m in idx_mes]
 
     fig_l3 = go.Figure()
     fig_l3.add_trace(go.Scatter(
@@ -637,12 +648,12 @@ with tab5:
 
         st.markdown("#### Métricas dos modelos (calibração regional Cerrado)")
         df_metr = pd.DataFrame([
-            {"Modelo":"GFS (NOAA)",  "RMSE temp":"0.82°C","Bias precip":"+0.3 mm",
-             "Confiança":"★★★★☆","Resolução":"0.25°","Atualização":"6h"},
-            {"Modelo":"ECMWF IFS",   "RMSE temp":"0.71°C","Bias precip":"-0.1 mm",
-             "Confiança":"★★★★★","Resolução":"0.1°", "Atualização":"12h"},
-            {"Modelo":"ICON (DWD)",  "RMSE temp":"0.95°C","Bias precip":"+0.5 mm",
-             "Confiança":"★★★☆☆","Resolução":"0.125°","Atualização":"6h"},
+            {"Modelo":"GFS (NOAA)",  "RMSE temp":"0.82°C", "Bias precip":"+0.3 mm",
+             "Confiança":"★★★★☆", "Resolução":"0.25°",  "Atualização":"6h"},
+            {"Modelo":"ECMWF IFS",   "RMSE temp":"0.71°C", "Bias precip":"-0.1 mm",
+             "Confiança":"★★★★★", "Resolução":"0.1°",   "Atualização":"12h"},
+            {"Modelo":"ICON (DWD)",  "RMSE temp":"0.95°C", "Bias precip":"+0.5 mm",
+             "Confiança":"★★★☆☆", "Resolução":"0.125°", "Atualização":"6h"},
         ])
         st.dataframe(df_metr, use_container_width=True, hide_index=True)
         st.markdown(
@@ -669,7 +680,6 @@ with tab6:
             showlegend=False,
             hoverinfo="skip",
         ))
-
         # Borda inferior — preenche até a superior
         fig_sc.add_trace(go.Scatter(
             x=cfg["anos"],
@@ -681,7 +691,6 @@ with tab6:
             showlegend=False,
             hoverinfo="skip",
         ))
-
         # Linha principal
         fig_sc.add_trace(go.Scatter(
             x=cfg["anos"],
@@ -703,10 +712,9 @@ with tab6:
     apply_template(fig_sc)
     st.plotly_chart(fig_sc, use_container_width=True)
 
-    # Índices de risco
     st.markdown("#### Índice de risco por cenário")
-    indicadores = ["Veranicos longos","Chuvas extremas",
-                   "Ondas de calor","Risco agrícola","Seca hídrica"]
+    indicadores = ["Veranicos longos", "Chuvas extremas",
+                   "Ondas de calor",   "Risco agrícola", "Seca hídrica"]
     niveis = {
         "Otimista (SSP1-2.6)":   [15, 30, 20, 15, 10],
         "Neutro (SSP2-4.5)":     [40, 55, 45, 40, 35],
@@ -729,17 +737,52 @@ with tab6:
     apply_template(fig_risk)
     st.plotly_chart(fig_risk, use_container_width=True)
 
-    # Tabela resumo
     df_sc = pd.DataFrame([
         {"Cenário":"Otimista (SSP1-2.6)",   "Aquecimento até 2055":"+1.2°C",
-         "Emissões":"Muito baixas","Ação climática":"Forte",   "Prob":"20%"},
+         "Emissões":"Muito baixas", "Ação climática":"Forte",   "Prob":"20%"},
         {"Cenário":"Neutro (SSP2-4.5)",      "Aquecimento até 2055":"+1.8°C",
-         "Emissões":"Moderadas",  "Ação climática":"Parcial",  "Prob":"50%"},
+         "Emissões":"Moderadas",   "Ação climática":"Parcial",  "Prob":"50%"},
         {"Cenário":"Pessimista (SSP5-8.5)",  "Aquecimento até 2055":"+3.5°C",
-         "Emissões":"Muito altas","Ação climática":"Mínima",   "Prob":"30%"},
+         "Emissões":"Muito altas", "Ação climática":"Mínima",   "Prob":"30%"},
     ])
     st.dataframe(df_sc, use_container_width=True, hide_index=True)
     st.markdown(
         '<p class="fonte-nota">Baseado em CMIP6 · downscaling regional Cerrado · '
         'Embrapa Clima · INMET histórico · probabilidades estimadas</p>',
         unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RODAPÉ
+# ══════════════════════════════════════════════════════════════════════════════
+
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("""
+<div class="rodape">
+    <div style="margin-bottom:6px;">
+        <span style="font-family:monospace;font-size:15px;color:#9CA3AF;">
+            ⛅ <strong style="color:#E8ECF0;">ClimAGO</strong>
+            &nbsp;—&nbsp; Previsão do Tempo · Corumbá de Goiás, GO
+        </span>
+    </div>
+    <div style="margin-bottom:8px;">
+        <span style="font-family:monospace;font-size:13px;color:#6B7280;">
+            © 2026 &nbsp;·&nbsp;
+            <a href="https://agrosophia.com.br" target="_blank"
+               style="color:#3B82F6;text-decoration:none;font-weight:bold;">
+                agrosophia.com.br
+            </a>
+            &nbsp;·&nbsp; Todos os direitos reservados
+        </span>
+    </div>
+    <div>
+        <span style="font-family:monospace;font-size:11px;color:#374151;">
+            Dados: Open-Meteo API &nbsp;·&nbsp; ERA5-Land &nbsp;·&nbsp;
+            ECMWF &nbsp;·&nbsp; GFS &nbsp;·&nbsp; ICON
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            Projeções: CMIP6 &nbsp;·&nbsp; Embrapa Clima &nbsp;·&nbsp; INMET
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            Uso educacional e agroclimático
+        </span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
